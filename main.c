@@ -36,13 +36,19 @@ void read_file(char* file_name, struct MatrixStructure *matrix) { // Handle file
         exit(0);
     }
     int r, c;
-    fscanf(fptr, "row=%d col=%d", &r, &c);
+    if (fscanf(fptr, "row=%d col=%d", &r, &c) == 0) {
+        fprintf(stderr, "Error reading file\n");
+        exit(0);
+    }
 
     int (*mat)[c] = malloc(r * c * sizeof(int));
 
     for (int i = 0; i < r; ++i) {
         for (int j = 0; j < c; ++j) {
-            fscanf(fptr, "%d", &mat[i][j]);
+            if (fscanf(fptr, "%d", &mat[i][j]) == 0) {
+                fprintf(stderr, "Error reading file\n");
+                exit(0);
+            }
         }
     }
     matrix->matrix = mat;
@@ -201,13 +207,17 @@ int main()
     char input[MAX_SIZE];
     char input1[64], input2[64], input3[64], input4[64];
     fgets(input, MAX_SIZE, stdin);
-    if (sscanf(input, "%63s %63s %63s %63s", input1, input2, input3, input4) != 3) {
+    int check = sscanf(input, "%63s %63s %63s %63s", input1, input2, input3, input4);
+    if (check == 1) {
         read_file(IN_MAT1, matA);
         read_file(IN_MAT2, matB);
         strcpy(input4, "c");
-    } else {
+    } else if (check == 4) {
         read_file(input2, matA);
         read_file(input3, matB);
+    } else {
+        fprintf(stderr, "Missed files!\n");
+        return 1;
     }
 
     if (strncmp(input1, "./matMult", 9) != 0) {
