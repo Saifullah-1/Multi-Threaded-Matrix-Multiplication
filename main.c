@@ -7,7 +7,6 @@
 #define MAX_SIZE 256
 #define IN_MAT1 "a"
 #define IN_MAT2 "b"
-#define MAT_OUT "c"
 #define MATRIX_TH "_per_matrix"
 #define ROW_TH "_per_row"
 #define ELEMENT_TH "_per_element"
@@ -31,17 +30,14 @@ void read_file(char* file_name, struct MatrixStructure *matrix) { // Handle file
     strcpy(path, file_name);
     strcat(path, ".txt");
     FILE *fptr;
-//    printf(">> %s", path);
     fptr = fopen(path, "r");
     if (fptr == NULL) {
         fprintf(stderr, "Error opening file\n");
         exit(0);
     }
     int r, c;
-    char param[MAX_SIZE];
     fscanf(fptr, "row=%d col=%d", &r, &c);
 
-    int size = r * c;
     int (*mat)[c] = malloc(r * c * sizeof(int));
 
     for (int i = 0; i < r; ++i) {
@@ -120,10 +116,11 @@ void matrix_thread(struct Data* data, char* file_name) {
         fprintf(stderr, "ERROR");
         exit(-1);
     }
-
     pthread_join(thread, NULL);
-    strcat(file_name, MATRIX_TH);
-    write_file(file_name, "Method: A thread per matrix", data);
+    char name[MAX_SIZE];
+    strcpy(name, file_name);
+    strcat(name, MATRIX_TH);
+    write_file(name, "Method: A thread per matrix", data);
 }
 
 
@@ -148,8 +145,10 @@ int row_thread(struct Data* data, char* file_name) {
             exit(-1);
         }
     }
-    strcat(file_name, ROW_TH);
-    write_file(file_name, "Method: A thread per row", data);
+    char name[MAX_SIZE];
+    strcpy(name, file_name);
+    strcat(name, ROW_TH);
+    write_file(name, "Method: A thread per row", data);
     return THREADS_NUM;
 }
 
@@ -178,13 +177,16 @@ int element_thread(struct Data* data, char* file_name) {
             exit(-1);
         }
     }
-    strcat(file_name, ELEMENT_TH);
-    write_file(file_name, "Method: A thread per element", data);
+    char name[MAX_SIZE];
+    strcpy(name, file_name);
+    strcat(name, ELEMENT_TH);
+    write_file(name, "Method: A thread per element", data);
     return THREADS_NUM;
 }
 
 void method_data(char* method_name, int threads_num, struct timeval start, struct timeval stop) {
-    printf("Method: %s\n", method_name);
+    printf("\n");
+    printf("---------------------------------------------------Method: %s---------------------------------------------------\n", method_name);
     printf("Number of threads = %d\n", threads_num);
     printf("Seconds taken %lu\n", stop.tv_sec - start.tv_sec);
     printf("Microseconds taken: %lu\n", stop.tv_usec - start.tv_usec);
@@ -199,11 +201,7 @@ int main()
     char input[MAX_SIZE];
     char input1[64], input2[64], input3[64], input4[64];
     fgets(input, MAX_SIZE, stdin);
-//    if (strncmp(input1, "./matMult", 9) != 0) {
-//        fprintf(stderr, "Invalid command!\n");
-//        return 1;
-//    }
-    if (sscanf(input, "./matMult %63s %63s %63s", input2, input3, input4) != 3) {
+    if (sscanf(input, "%63s %63s %63s %63s", input1, input2, input3, input4) != 3) {
         read_file(IN_MAT1, matA);
         read_file(IN_MAT2, matB);
         strcpy(input4, "c");
@@ -212,10 +210,16 @@ int main()
         read_file(input3, matB);
     }
 
+    if (strncmp(input1, "./matMult", 9) != 0) {
+        fprintf(stderr, "Invalid command!\n");
+        return 1;
+    }
+
     if (matA->c != matB->r) {
         fprintf(stderr, "Matrices sizes should be X*Y, Y*Z");
         exit(0);
     }
+
     data->matA = matA;
     data->matB = matB;
     data->r = matA->r;
